@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Downloader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            text-align: center;
+        }
+        .container h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: none;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #5cb85c;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #4cae4c;
+        }
+        .result {
+            margin-top: 20px;
+        }
+        .result a {
+            display: block;
+            margin: 5px 0;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .result a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Video Downloader</h1>
+        <textarea id="urls" placeholder="Enter video URLs, one per line..."></textarea>
+        <button id="downloadBtn">Download</button>
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('downloadBtn').addEventListener('click', async () => {
+            const urls = document.getElementById('urls').value.trim().split('\n');
+            if (urls.length === 0 || urls[0] === '') {
+                alert('Please enter at least one video URL.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ urls }),
+                });
+
+                const result = await response.json();
+
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = '';
+
+                if (result.files) {
+                    result.files.forEach((file, index) => {
+                        if (file) {
+                            const link = document.createElement('a');
+                            link.href = `/files/${file}`;
+                            link.textContent = `Download Video ${index + 1}`;
+                            resultDiv.appendChild(link);
+                        } else {
+                            const errorMsg = document.createElement('p');
+                            errorMsg.textContent = `Error downloading URL ${index + 1}`;
+                            errorMsg.style.color = 'red';
+                            resultDiv.appendChild(errorMsg);
+                        }
+                    });
+                } else if (result.error) {
+                    alert(result.error);
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while processing your request.');
+            }
+        });
+    </script>
+</body>
+</html>
